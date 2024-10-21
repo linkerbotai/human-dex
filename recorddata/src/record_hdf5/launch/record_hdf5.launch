@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <!-- Start yolov5 and ros wrapper -->
+  <node pkg="record_hdf5" type="record_hdf5.py" name="record_hdf5" output="screen" >
+  </node>
+</launch>

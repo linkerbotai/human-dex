@@ -1,0 +1,11 @@
+dm_env==1.6
+pyquaternion==0.9.9
+pyagxrobots==0.8.4
+pycryptodome==3.10.1
+ipython==8.12.3
+esdk-obs-python==3.24.6.1
+h5py==3.11.0
+PyYAML==6.0.1
+tqdm==4.66.4
+wandb==0.17.3
+wrapt==1.11.2

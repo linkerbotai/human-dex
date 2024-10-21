@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <node pkg="record_hdf5" type="validate_hdf5.py" name="validate_hdf5" output="screen" >
+  </node>
+</launch>

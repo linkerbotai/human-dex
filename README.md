@@ -71,5 +71,5 @@ python3 cb.py
 
 # **Hardware**
 1. [LinkerBot Humanoid Robot](https://www.linkerbot.cn) 1
-2. [LinkerBot L10 DexHand]((https://www.linkerbot.cn) 2
-3. [LinkerBot Teleop system with glove]((https://www.linkerbot.cn) 1
+2. [LinkerBot L10 DexHand](https://www.linkerbot.cn) 2
+3. [LinkerBot Teleop system with glove](https://www.linkerbot.cn) 1

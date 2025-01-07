@@ -18,7 +18,11 @@ This code validates on ubuntu 20.04 with ROS noetic
 1. Install python dependency
 ```sh
 cd human-dex
-pip3 install -r requirements.txt
+conda create -n human-dex python=3.8.10
+conda activate human-dex
+pip install torchvision
+pip install torch
+pip install -r requirements.txt
 ```
 2. Install ROS noetic 
 3. Create workspace directory，such as: ~/your_ws
@@ -26,6 +30,7 @@ pip3 install -r requirements.txt
 5. source /opt/ros/noetic/setup.sh 
 6. run catkin_make inside ~/your_ws, make sure the build is successful
 7. source ~/your_ws/devel/setup.sh
+
 
 ## **Run**
 
@@ -65,6 +70,6 @@ python3 cb.py
 ```
 
 # **Hardware**
-1. [LinkerBot Humanoid Robot](www.linkerbot.cn) 1
-2. [LinkerBot L10 DexHand](www.linkerbot.cn) 2
-3. [LinkerBot Teleop system with glove](www.linkerbot.cn) 1
+1. [LinkerBot Humanoid Robot](https://www.linkerbot.cn) 1
+2. [LinkerBot L10 DexHand]((https://www.linkerbot.cn) 2
+3. [LinkerBot Teleop system with glove]((https://www.linkerbot.cn) 1

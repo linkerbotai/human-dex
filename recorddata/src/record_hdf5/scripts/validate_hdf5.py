@@ -62,7 +62,7 @@ class ValidateHdf5():
             episode_idx = int(data.data)
         else:
             episode_idx = 0
-        dataset_dir = "/home/nx/ROS/robot_internal_srv/collection_data/hdf5/humanplus_hdf5"
+        dataset_dir = "/home/moning/dataset/baicai/humanplus_hdf5"
         #episode_idx = "1"
         ismirror = False
         if ismirror:

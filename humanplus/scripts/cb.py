@@ -291,9 +291,11 @@ def get_image(camera_names):
     curr_images = []
     for cam_name in camera_names:
         if cam_name == "cam_left":
-            img_msg = rospy.wait_for_message("/camera/rgb/image_raw/cam_left",Image, timeout=0.5)
-        elif cam_name == "cam_right":
+            img_msg = rospy.wait_for_message("/camera/rgb/image_raw/cam_top",Image, timeout=0.5)
+        elif cam_name == "cam_hand":
             img_msg = rospy.wait_for_message("/camera/rgb/image_raw/cam_right",Image, timeout=0.5)
+        elif cam_name =="cam_top":
+            img_msg = rospy.wait_for_message("/camera/rgb/image_raw/cam_front",Image, timeout=0.5)
         #curr_image = rearrange(ts.observation['images'][cam_name], 'h w c -> c h w')
         # 使用cv_bridge将ROS图像消息转换为OpenCV格式
         bridge = CvBridge()
@@ -306,7 +308,9 @@ def get_image(camera_names):
 
 def eval_bc(config, ckpt_name, save_episode=True, num_rollouts=50):
     set_seed(1000)
-    ckpt_dir = "/home/hjx/ROS/humanplus_ros/src/humanplus_ros/scripts/utils/hardware-script/30j_30000_bbb/"
+    # ckpt_dir = "/home/hjx/ROS/humanplus_ros/src/humanplus_ros/scripts/utils/hardware-script/30j_30000_bbb/"
+    ckpt_dir = "/home/moning/project/human-dex/humanplus/scripts/utils/HIT/cb_grasp/_data_baicai_grasp_HIT_resnet18_True"
+    ckpt_dir = config['ckpt_dir']
     state_dim = config['state_dim']
     real_robot = config['real_robot']
     policy_class = config['policy_class']
@@ -395,7 +399,7 @@ def eval_bc(config, ckpt_name, save_episode=True, num_rollouts=50):
                     image_list.append({'main': obs['image']})
                 
                 qpos_numpy = np.array(obs['qpos'])
-                print(qpos_numpy)
+                # print(qpos_numpy)
                 #exit()
                 qpos = pre_process(qpos_numpy)
                 qpos = np.nan_to_num(qpos, nan=0.0)
@@ -490,7 +494,7 @@ if __name__ == '__main__':
     parser.add_argument('--onscreen_render', action='store_true')
     parser.add_argument('--ckpt_dir', default="hardware-script/30j_30000", action='store', type=str, help='ckpt_dir')
     parser.add_argument('--policy_class', default="HIT", action='store', type=str, help='policy_class, capitalize')
-    parser.add_argument('--task_name', default="data_cb_grasp", action='store', type=str, help='task_name')
+    parser.add_argument('--task_name', default="data_baicai_grasp", action='store', type=str, help='task_name')
     
     parser.add_argument('--batch_size', default=32, action='store', type=int, help='batch_size')
     parser.add_argument('--seed', default=0, action='store', type=int, help='seed')

@@ -41,9 +41,12 @@ class RealEnv:
 
     def __init__(self, init_node, setup_robots=True, setup_base=False):
         self.recorder_arms = Recorder('left', init_node=False)
+        # 设置参数
+        rospy.set_param('/activate_node', True)
+
         self.image_recorder = ImageRecorder(init_node=False)
-        self.left_hand_pub = rospy.Publisher("/cb_left_hand_control_cmd", JointState, queue_size=10)
-        self.right_hand_pub = rospy.Publisher("/cb_right_hand_control_cmd", JointState, queue_size=10)
+        self.left_hand_pub = rospy.Publisher("/cb_left_hand_control_cmd_arc", JointState, queue_size=10)
+        self.right_hand_pub = rospy.Publisher("/cb_right_hand_control_cmd_arc", JointState, queue_size=10)
         self.arm_pub = rospy.Publisher("/cb_arm_control_cmd", JointState, queue_size=10)
 
     def joint_msg(self,action, name):
@@ -96,9 +99,10 @@ class RealEnv:
 
     def get_aloha_qpos(self):
         arm = self.recorder_arms.qpos
-        l_qpos = arm[:6]
-        r_qpos = arm[6:]
-        return np.concatenate([l_qpos, r_qpos, self.recorder_arms.left_hand_qpos,  self.recorder_arms.right_hand_qpos])
+        r_qpos = arm[:6]
+        l_qpos = arm[6:]
+        # return np.concatenate([l_qpos, r_qpos, self.recorder_arms.left_hand_qpos,  self.recorder_arms.right_hand_qpos])
+        return np.concatenate([r_qpos, self.recorder_arms.right_hand_qpos])
     def get_qvel(self):
         arm_qvel = [0]*LEFT_ARM_JOINT + [0]*RIGHT_ARM_JOINT
         return np.array(arm_qvel)
@@ -154,30 +158,41 @@ class RealEnv:
         # print(len(left_hand_position))
         # right_hand_position = hands_action[hands_len:] # 右手数据
         # 截取双臂数据
-        arms_action = action[:12]
+        arms_action = action[:6]#单臂双臂训练不同。
+        # new_elements = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        # arms_action = arms_action + new_elements
+        data_to_append = np.array([0, 0, 0, 0, 0, 0])
+        arms_action = np.append(arms_action, data_to_append)
+        # print('arm0', type(arms_action))
+        # arms_action += [0] * 6
+        # print('arm', arms_action)
         # 截取双手数据
-        hands_action = action[12:]
+        hands_action = action[6:]#单臂双臂训练不同。
         # 左手数据
-        left_hand_position = hands_action[:LEFT_HAND_JOINT]
-        right_hand_position = hands_action[RIGHT_HAND_JOINT:]
+        # left_hand_position = hands_action[:LEFT_HAND_JOINT]#单臂双臂训练不同。
+        # right_hand_position = hands_action[RIGHT_HAND_JOINT:]
+        right_hand_position = hands_action
 
-        # 遍历列表并修改小于 0.0 的元素
-        for i, value in enumerate(left_hand_position):
-            if value < 0.0:
-                left_hand_position[i] = 0.0
-        for j, v in enumerate(right_hand_position):
-            if v < 0.0:
-                right_hand_position[j] = 0.0
+        # # 遍历列表并修改小于 0.0 的元素
+        # for i, value in enumerate(left_hand_position):
+        #     if value < 0.0:
+        #         left_hand_position[i] = 0.0
+#保证全部大于等于0
+        # for j, v in enumerate(right_hand_position):
+        #     if v < 0.0:
+        #         right_hand_position[j] = -right_hand_position[j]
+
         # 左手数据
-        left_j=self.joint_msg(action=left_hand_position,name=self.recorder_arms.left_hand_name)
+        # left_j=self.joint_msg(action=left_hand_position,name=self.recorder_arms.left_hand_name)#单臂双臂训练不同。
         #print(f"左手数据：{left_j}")
-        self.left_hand_pub.publish(left_j)
+        # self.left_hand_pub.publish(left_j)
         # 右手数据
         right_j = self.joint_msg(action=right_hand_position,name=self.recorder_arms.right_hand_name)
-        #print(f"右手数据：{right_j}")
+        print(f"右手数据：{right_j}")
         self.right_hand_pub.publish(right_j)
         # 双臂数据
         arms_j = self.joint_msg(action=arms_action, name=self.recorder_arms.name)
+        
         self.arm_pub.publish(arms_j)
         
         if base_action is not None:

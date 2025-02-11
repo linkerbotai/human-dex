@@ -2,14 +2,14 @@ import os
 
 ### Task parameters
 DATA_DIR = f'{os.path.dirname(os.path.realpath(__file__))}/data' 
-LEFT_HAND_JOINT = 9 # 左手关节数
-RIGHT_HAND_JOINT = 9 # 右手关节数
+LEFT_HAND_JOINT = 16 # 左手关节数
+RIGHT_HAND_JOINT = 16 # 右手关节数
 LEFT_ARM_JOINT = 6 # 左臂关节数
 RIGHT_ARM_JOINT = 6 # 右臂关节数
 TASK_CONFIGS = {
     'data_columbus_test':{
         'dataset_dir': DATA_DIR + '/collection_data/hdf5',
-        'camera_names': ['cam_left', 'cam_right'],
+        'camera_names': ['cam_top', 'cam_right', 'cam_front'],
         'observation_name': ['qpos','hand_action'],
         'num_episodes': 100,
         'episode_len': 400,
@@ -18,6 +18,18 @@ TASK_CONFIGS = {
         'action_dim':[1]*LEFT_ARM_JOINT+[1]*RIGHT_ARM_JOINT+[1]*LEFT_HAND_JOINT+[1]*RIGHT_HAND_JOINT,
         'state_mask': [1]*LEFT_ARM_JOINT+[1]*RIGHT_ARM_JOINT+[1]*LEFT_HAND_JOINT+[1]*RIGHT_HAND_JOINT,
         'action_mask': [1]*LEFT_ARM_JOINT+[1]*RIGHT_ARM_JOINT+[1]*LEFT_HAND_JOINT+[1]*RIGHT_HAND_JOINT,
+    },
+    'data_baicai_grasp': {
+        'dataset_dir': '/home/moning/dataset/baicai',
+        'camera_names': ['cam_top', 'cam_front', 'cam_right'],
+        'observation_name': ['qpos', 'hand_action'],
+        'num_episodes': 100,
+        'episode_len': 1000,
+        'joint_total': 22,
+        'state_dim': 22,
+        'action_dim': 22,
+        'state_mask': [1] * RIGHT_ARM_JOINT + [1] * RIGHT_HAND_JOINT,
+        'action_mask': [1] * RIGHT_ARM_JOINT + [1] * RIGHT_HAND_JOINT,
     },
     'data_fold_clothes':{
         'dataset_dir': DATA_DIR + '/data_fold_clothes',

@@ -98,14 +98,18 @@ class Recorder:
 
         if init_node:
             rospy.init_node('recorder', anonymous=True)
+        # 设置参数
+        rospy.set_param('/activate_node', True)
         # state
         rospy.Subscriber("/joint_states", JointState, self.joint_state_cb, queue_size=10)
-        rospy.Subscriber("/cb_left_hand_state", JointState, self.left_hand_state_cb,queue_size=10)
-        rospy.Subscriber("/cb_right_hand_state", JointState, self.right_hand_state_cb,queue_size=10)
+        rospy.Subscriber("/cb_left_hand_state_arc", JointState, self.left_hand_state_cb,queue_size=10)
+        rospy.Subscriber("/cb_right_hand_state_arc", JointState, self.right_hand_state_cb,queue_size=10)
         # action
         rospy.Subscriber("/cb_arm_control_cmd", JointState, self.arms_action_cb,queue_size=10)
-        rospy.Subscriber("/cb_left_hand_control_cmd", JointState, self.left_hand_action_cb,queue_size=10)
-        rospy.Subscriber("/cb_right_hand_control_cmd", JointState, self.right_hand_action_cb,queue_size=10)
+        rospy.Subscriber("/cb_left_hand_control_cmd_arc", JointState, self.left_hand_action_cb,queue_size=10)
+        rospy.Subscriber("/cb_right_hand_control_cmd_arc", JointState, self.right_hand_action_cb,queue_size=10)
+
+
 
         time.sleep(0.1)
 
@@ -145,6 +149,7 @@ class Recorder:
         tmp_data = data
         self.right_hand_name = tmp_data.name[:RIGHT_HAND_JOINT]
         self.right_hand_qpos = tmp_data.position[:RIGHT_HAND_JOINT]
+        # print('right_hand_qpos', self.right_hand_qpos)
         self.right_hand_qvel = tmp_data.velocity[:RIGHT_HAND_JOINT]
         self.right_hand_effort = tmp_data.effort[:RIGHT_HAND_JOINT]
 

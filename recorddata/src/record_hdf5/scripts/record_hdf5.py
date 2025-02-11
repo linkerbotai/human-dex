@@ -1,4 +1,6 @@
 #! /usr/bin/env python3
+import sys
+print(sys.executable)
 import rospy, tf, h5py, ast, rospkg, cv2,sys,os,json,time, re,json
 from PIL import Image as PILImage  # 为 Pillow 的 Image 模块重命名
 import numpy as np
@@ -15,6 +17,7 @@ from utils.real_env import RealEnv
 from utils.constants import DT, TASK_CONFIGS, FPS,LEFT_HAND_JOINT,RIGHT_HAND_JOINT,LEFT_ARM_JOINT,RIGHT_ARM_JOINT
 # rostopic pub /record_hdf5 std_msgs/String "data: '{\"method\":\"start\",\"type\":\"humanplus\"}'"
 # rostopic pub /record_hdf5 std_msgs/String "data: '{\"method\":\"start\",\"type\":\"aloha\"}'"
+
 class RecordHdf5:
     def __init__(self):
         self.task_pub = rospy.Publisher("/app_control_cmd",String,queue_size=10)
@@ -38,17 +41,29 @@ class RecordHdf5:
         }
         # 创建CvBridge对象
         self.bridge = CvBridge()
-        self.env = RealEnv()
-        self.task_config = TASK_CONFIGS["data_columbus_test"]
+
+
+        # self.task_config = TASK_CONFIGS["data_columbus_test"]
+        # # self.task_config = TASK_CONFIGS[task_type]
+        # self.joint_total = self.task_config["joint_total"]
+        # self.dataset_dir = self.task_config['dataset_dir']
+        # self.max_timesteps = self.task_config['episode_len']
+        # self.camera_names = self.task_config['camera_names']
+        # self.episode_idx = self.get_max_episode_number() + 1
+        ColorMsg(msg="hdf5采集功能准备就绪", color="green")
+        sub = rospy.Subscriber("/record_hdf5", String, self.record_hdf5, queue_size=1)
+    def record_hdf5(self,data):
+        result = json.loads(data.data)
+        task_type = result["task"]
+        self.task_config = TASK_CONFIGS[task_type]
         self.joint_total = self.task_config["joint_total"]
         self.dataset_dir = self.task_config['dataset_dir']
         self.max_timesteps = self.task_config['episode_len']
         self.camera_names = self.task_config['camera_names']
         self.episode_idx = self.get_max_episode_number() + 1
-        ColorMsg(msg="hdf5采集功能准备就绪", color="green")
-        sub = rospy.Subscriber("/record_hdf5", String, self.record_hdf5, queue_size=1)
-    def record_hdf5(self,data):
-        result = json.loads(data.data)
+        self.env = RealEnv(self.camera_names)
+        # print
+
         if result["method"] == "stop":
             self.clean_data()
         if result["method"] == "start":
@@ -68,12 +83,12 @@ class RecordHdf5:
             if result["type"] == "humanplus":
                 self.dataset_dir = self.task_config['dataset_dir']+"/humanplus_hdf5/"
                 self.episode_idx = self.get_max_episode_number() + 1
-                self.env = RealEnv()
+                self.env = RealEnv(self.camera_names)
                 self.record(d="humanplus")
             elif result["type"] == "aloha":
                 self.dataset_dir = self.task_config['dataset_dir']+"/aloha_hdf5/"
                 self.episode_idx = self.get_max_episode_number() + 1
-                self.env = RealEnv()
+                self.env = RealEnv(self.camera_names)
                 self.record(d="aloha")
     def clean_data(self):
         self.humanplus_data_dic = {
@@ -100,6 +115,8 @@ class RecordHdf5:
         pattern = re.compile(r'episode_(\d+)\.hdf5')
         max_number = -1  # 初始化最大值为 -1，表示没有找到任何符合条件的文件
         # 遍历目录中的所有文件
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         for filename in os.listdir(directory):
             match = pattern.match(filename)
             if match:
@@ -169,6 +186,8 @@ class RecordHdf5:
 
     def to_humanplus_hdf5(self,ts, timesteps, actions):
         dataset_path = self.dataset_dir+f"episode_{self.episode_idx}"
+        # if not os.path.exists(dataset_path):
+        #     os.makedirs(dataset_path)
         
         for cam_name in self.camera_names:
             self.humanplus_data_dic[f'/observations/images/{cam_name}'] = []
@@ -180,7 +199,7 @@ class RecordHdf5:
             ts = timesteps.pop(0)
             arm_j = int(LEFT_ARM_JOINT+RIGHT_ARM_JOINT)
             self.humanplus_data_dic["/action"].append(action)
-            self.humanplus_data_dic["/observations/hand_action"].append(action[arm_j:]) # 总action切除手臂元素=双手action
+            self.humanplus_data_dic["/observations/hand_action"].append(action[6:]) # 总action切除手臂元素=双手action
             self.humanplus_data_dic["/observations/imu_orn"].append(np.array([0]*self.joint_total, dtype=np.float32))
             self.humanplus_data_dic["/observations/imu_vel"].append(np.array([0]*self.joint_total, dtype=np.float32))
             self.humanplus_data_dic["/observations/qpos"].append(ts.observation['qpos'])
@@ -188,6 +207,7 @@ class RecordHdf5:
             self.humanplus_data_dic["/observations/wrist"].append(np.array([0.0]*2, dtype=np.float32))
 
             # data_dict['/base_action_t265'].append(ts.observation['base_vel_t265'])
+            # print(ts.observation['images'])
             for cam_name in self.camera_names:
                 self.humanplus_data_dic[f'/observations/images/{cam_name}'].append(ts.observation['images'][cam_name])
         COMPRESS = True
@@ -217,7 +237,7 @@ class RecordHdf5:
                 for compressed_image in compressed_image_list:
                     padded_compressed_image = np.zeros(padded_size, dtype='uint8')
                     image_len = len(compressed_image)
-                    padded_compressed_image[:image_len] = compressed_image
+                    padded_compressed_image[:image_len] = compressed_image[0]
                     padded_compressed_image_list.append(padded_compressed_image)
                 self.humanplus_data_dic[f'/observations/images/{cam_name}'] = padded_compressed_image_list
             print(f'padding: {time.time() - t0:.2f}s')
@@ -237,7 +257,7 @@ class RecordHdf5:
                     _ = image.create_dataset(cam_name, (self.max_timesteps, 480, 640, 3), dtype='uint8',
                                             chunks=(1, 480, 640, 3), )
             _ = root.create_dataset('action', (self.max_timesteps, self.joint_total))
-            _ = obs.create_dataset('hand_action', (self.max_timesteps, LEFT_HAND_JOINT+RIGHT_HAND_JOINT))
+            _ = obs.create_dataset('hand_action', (self.max_timesteps, RIGHT_HAND_JOINT))
             _ = obs.create_dataset('imu_orn', (self.max_timesteps, self.joint_total))
             _ = obs.create_dataset('imu_vel', (self.max_timesteps, self.joint_total))
             _ = obs.create_dataset('qpos', (self.max_timesteps, 12))
@@ -247,6 +267,7 @@ class RecordHdf5:
 
             for name, array in self.humanplus_data_dic.items():
                 print(name)
+                # print(array.shape)
                 root[name][...] = array
             if COMPRESS:
                 _ = root.create_dataset('compress_len', (len(self.camera_names), self.max_timesteps))
@@ -259,6 +280,8 @@ class RecordHdf5:
 
     def to_aloha_hdf5(self, ts, timesteps, actions):
         dataset_path = self.dataset_dir+f"episode_{self.episode_idx}"
+        # if not os.path.exists(directory):
+        #     os.makedirs(directory)
         
         for cam_name in self.camera_names:
             self.aloha_data_dict[f'/observations/images/{cam_name}'] = []

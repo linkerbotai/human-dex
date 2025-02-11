@@ -13,14 +13,15 @@ import IPython
 e = IPython.embed
 
 class ImageRecorder:
-    def __init__(self, init_node=True, is_debug=False):
+    def __init__(self,camera_name, init_node=True, is_debug=False):
         from collections import deque
         import rospy
         from cv_bridge import CvBridge
         from sensor_msgs.msg import Image
         self.is_debug = is_debug
         self.bridge = CvBridge()
-        self.camera_names = ['cam_left', 'cam_right']
+        self.camera_names = ['cam_top', 'cam_right', 'cam_front']
+        self.camera_names = camera_name
         if init_node:
             rospy.init_node('image_recorder', anonymous=True)
         for cam_name in self.camera_names:
@@ -35,6 +36,12 @@ class ImageRecorder:
                 callback_func = self.image_cb_cam_left
             elif cam_name == 'cam_right':
                 callback_func = self.image_cb_cam_right
+            elif cam_name == 'cam_top':
+                callback_func = self.image_cb_cam_top
+            elif cam_name == 'cam_front':
+                callback_func = self.image_cb_cam_front
+            elif cam_name == 'cam_hand':
+                callback_func = self.image_cb_cam_hand
             else:
                 raise NotImplementedError
             rospy.Subscriber(f"/camera/rgb/image_raw/{cam_name}", Image, callback_func)
@@ -60,7 +67,15 @@ class ImageRecorder:
     def image_cb_cam_right(self, data):
         cam_name = 'cam_right'
         return self.image_cb(cam_name, data)
-
+    def image_cb_cam_top(self, data):
+        cam_name = 'cam_top'
+        return self.image_cb(cam_name, data)
+    def image_cb_cam_front(self, data):
+        cam_name = 'cam_front'
+        return self.image_cb(cam_name, data)
+    def image_cb_cam_hand(self, data):
+        cam_name = 'cam_hand'
+        return self.image_cb(cam_name, data)
     def get_images(self):
         image_dict = dict()
         for cam_name in self.camera_names:

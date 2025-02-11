@@ -17,9 +17,9 @@ import IPython
 e = IPython.embed
 
 class RealEnv:
-    def __init__(self):
+    def __init__(self, camera_name):
         self.recorder_arms = Recorder('left', init_node=False)
-        self.image_recorder = ImageRecorder(init_node=False)
+        self.image_recorder = ImageRecorder(camera_name, init_node=False)
         #self.recorder_right = Recorder('right', init_node=False)
 
     def reset(self, fake=False,t="aloha"):
@@ -97,7 +97,8 @@ class RealEnv:
         arms_action = self.recorder_arms.arm_action
         left_hand_action = self.recorder_arms.left_hand_action
         right_hand_action = self.recorder_arms.right_hand_action
-        action = arms_action+left_hand_action+right_hand_action
+        # action = arms_action+left_hand_action+right_hand_action
+        action = arms_action[:6] + right_hand_action
         return action
     def clean_data(self):
         self.recorder_arms.clean_recorder()

@@ -69,7 +69,7 @@ wget http://fishros.com/install -O fishros && . fishros
 
 1.1 Run record node inside `./recorddata`
 ```sh
-rosrun record_hdf5 validate_hdf5.py
+rosrun record_hdf5 record_hdf5.py
 ```
 Set task parameters in src/record_hdf5/scripts/utils/constants.py.
 
